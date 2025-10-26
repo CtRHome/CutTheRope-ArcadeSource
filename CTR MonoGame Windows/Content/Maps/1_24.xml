@@ -1,0 +1,42 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<candy x="228" y="323" />
+<target x="65" y="87" />
+<star x="203" y="271" timeout="-1" />
+<star x="172" y="177" timeout="-1" />
+<star x="119" y="88" timeout="-1" />
+<grab x="277" y="178" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="100" y="238" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="258" y="424" length="45" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<tutorialText x="43" y="357" locale="en" text="Sometimes, you need to be fast" width="140" />
+<tutorial09 x="110" y="347" locale="en" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ru">
+<tutorial09 x="110" y="346" locale="ru" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="43" y="356" locale="ru" text="Иногда нужно действовать быстро" width="140" />
+</layer>
+<layer name="Fr">
+<tutorialText x="39" y="329" locale="fr" text="Il te faut parfois être rapide" width="150" />
+<tutorial09 x="106" y="319" locale="fr" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorialText x="43" y="358" locale="de" text="Manchmal musst Du schnell sein" width="140" />
+<tutorial09 x="110" y="348" locale="de" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Zh">
+<tutorialText x="47" y="363" locale="zh" text="有些时候，你必须身手敏捷
+" width="140" />
+<tutorial09 x="110" y="348" locale="zh" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ja">
+<tutorialText x="42" y="366" locale="ja" text="速い動きが必要な
+ケースもあります
+
+" width="140" />
+<tutorial09 x="110" y="348" locale="ja" moveSpeed="100" rotateSpeed="100" />
+</layer>
+</map>

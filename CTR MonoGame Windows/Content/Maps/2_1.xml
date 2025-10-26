@@ -1,0 +1,43 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<candy x="161" y="230" />
+<target x="254" y="416" />
+<star x="299" y="99" timeout="-1" />
+<star x="20" y="99" timeout="-1" />
+<star x="161" y="181" timeout="-1" />
+<pump x="42" y="247" angle="0" />
+<pump x="277" y="243" angle="180" />
+<grab x="162" y="98" length="110" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<pump x="161" y="334" angle="-90" />
+<tutorialText x="22" y="357" locale="en" text="Tap the Air Cushion to blow objects" width="180" />
+<tutorial04 x="101" y="347" locale="en" angle="180" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ru">
+<tutorial04 x="104" y="350" locale="ru" angle="180" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="22" y="357" locale="ru" text="Нажмите на подушку чтобы подуть на леденец" width="180" />
+</layer>
+<layer name="Fr">
+<tutorial04 x="101" y="356" locale="fr" angle="180" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="9" y="358" locale="fr" text="Touche le coussin d'air pour qu'il souffle sur les objets" width="210" />
+</layer>
+<layer name="De">
+<tutorial04 x="102" y="354" locale="de" angle="180" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="7" y="357" locale="de" text="Berühre den Luftballon, um Objekte wegzupusten" width="210" />
+</layer>
+<layer name="Zh">
+<tutorial04 x="102" y="354" locale="zh" angle="180" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="-2" y="361" locale="zh" text="触按气垫以吹起物品 
+" width="210" />
+</layer>
+<layer name="Ja">
+<tutorial04 x="112" y="344" locale="ja" angle="180" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="17" y="348" locale="ja" text="エアークッションをタップ
+していろいろなものを
+吹き飛ばしましょう
+" width="210" />
+</layer>
+</map>

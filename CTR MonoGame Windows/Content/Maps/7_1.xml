@@ -1,0 +1,44 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<candy x="134" y="214" />
+<grab x="214" y="175" length="65" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="46" y="175" length="65" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<target x="257" y="380" />
+<star x="262" y="81" timeout="-1" />
+<star x="133" y="85" timeout="-1" />
+<gravitySwitch x="55" y="398" />
+<spike4 x="104" y="323" angle="0" size="4" toggled="false" />
+<spike4 x="104" y="46" angle="0" size="4" toggled="false" />
+<tutorialText x="82" y="333" locale="en" text="Toggle the gravity with this button" width="140" />
+<tutorial04 x="119" y="418" locale="en" angle="35" moveSpeed="100" rotateSpeed="100" />
+<star x="133" y="273" timeout="-1" />
+</layer>
+<layer name="Ru">
+<tutorial04 x="111" y="429" locale="ru" angle="40" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="83" y="328" locale="ru" text="Переключайте гравитацию с помощью этой кнопки" width="140" />
+</layer>
+<layer name="Fr">
+<tutorialText x="86" y="317" locale="fr" text="Active et désactive la gravité avec ce bouton" width="130" />
+<tutorial04 x="119" y="418" locale="fr" angle="35" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorial04 x="105" y="431" locale="de" angle="55" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="82" y="334" locale="de" text="Hier kannst Du die Schwerkraft ein oder aus schalten" width="145" />
+</layer>
+<layer name="Zh">
+<tutorial04 x="105" y="431" locale="zh" angle="55" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="98" y="394" locale="zh" text="用此按钮切换叶片
+" width="145" />
+</layer>
+<layer name="Ja">
+<tutorial04 x="105" y="431" locale="ja" angle="55" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="80" y="356" locale="ja" text="このボタンで
+重力をON/OFF
+できます
+" width="145" />
+</layer>
+</map>

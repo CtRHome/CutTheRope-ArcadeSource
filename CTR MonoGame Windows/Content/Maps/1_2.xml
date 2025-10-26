@@ -1,0 +1,40 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<candy x="69" y="203" />
+<grab x="52" y="70" length="90" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="162" y="69" length="170" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<target x="264" y="419" />
+<star x="54" y="250" timeout="-1" />
+<star x="53" y="369" timeout="-1" />
+<star x="280" y="250" timeout="-1" />
+<grab x="275" y="69" length="320" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<tutorialText x="133" y="285" locale="en" text="Collect as many stars as you can" width="150" />
+<tutorial09 x="113" y="321" locale="en" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ru">
+<tutorial09 x="94" y="315" locale="ru" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="103" y="278" locale="ru" text="Старайтесь собирать звезды леденцом" width="210" />
+</layer>
+<layer name="Fr">
+<tutorialText x="137" y="285" locale="fr" text="Collecte autant d'étoiles que tu le peux" width="150" />
+<tutorial09 x="113" y="321" locale="fr" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorialText x="126" y="285" locale="de" text="Sammle möglichst viele Sternchen" width="170" />
+<tutorial09 x="106" y="321" locale="de" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Zh">
+<tutorialText x="123" y="292" locale="zh" text="尽可能多地收集星星
+" width="170" />
+<tutorial09 x="106" y="321" locale="zh" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ja">
+<tutorialText x="126" y="285" locale="ja" text="できるだけスターを
+獲得しましょう" width="170" />
+<tutorial09 x="106" y="321" locale="ja" moveSpeed="100" rotateSpeed="100" />
+</layer>
+</map>

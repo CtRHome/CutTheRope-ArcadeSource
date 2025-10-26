@@ -1,0 +1,46 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<tutorialText x="78" y="32" locale="en" text="Candy maintains its speed when teleporting" width="200" />
+<tutorial09 x="59" y="70" locale="en" moveSpeed="100" rotateSpeed="100" />
+<target x="253" y="177" />
+<sock x="241" y="373" group="0" angle="-180" />
+<sock x="70" y="235" group="0" angle="-60" />
+<candy x="191" y="379" />
+<grab x="112" y="378" length="50" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="80" moveVertical="false" moveOffset="80" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="266" y="321" length="55" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="267" y="432" length="55" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<star x="113" y="169" path="RW30" moveSpeed="70" timeout="-1" />
+<star x="148" y="154" path="RC30" moveSpeed="80" timeout="-1" />
+<star x="130" y="158" path="RC20" moveSpeed="80" timeout="-1" />
+</layer>
+<layer name="Fr">
+<tutorialText x="66" y="29" locale="fr" text="La vitesse du bonbon reste identique lorsqu'il est téléporté" width="200" />
+<tutorial09 x="50" y="73" locale="fr" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorialText x="71" y="28" locale="de" text="Beim Teleportieren behält der Bonbon seine Geschwindigkeit bei" width="200" />
+<tutorial09 x="54" y="72" locale="de" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ru">
+<tutorialText x="62" y="31" locale="ru" text="Конфета сохраняет свою скорость при телепортации" width="240" />
+<tutorial09 x="43" y="69" locale="ru" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Zh">
+<tutorialText x="55" y="29" locale="zh" text="在传送时糖果
+保持其速度
+" width="200" />
+<tutorial09 x="75" y="54" locale="zh" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ja">
+<tutorialText x="63" y="48" locale="ja" text="テレポート中、
+キャンディーの
+スピードは維持されます
+
+" width="200" />
+<tutorial09 x="157" y="37" locale="ja" moveSpeed="100" rotateSpeed="100" />
+</layer>
+</map>

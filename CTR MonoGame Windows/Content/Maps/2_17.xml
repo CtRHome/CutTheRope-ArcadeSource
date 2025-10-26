@@ -1,0 +1,45 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<candy x="100" y="197" />
+<grab x="99" y="111" length="40" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<target x="185" y="431" />
+<star x="184" y="344" timeout="15" />
+<star x="98" y="62" timeout="4" />
+<star x="264" y="163" timeout="6" />
+<bubble x="98" y="346" />
+<pump x="101" y="440" angle="-90" />
+<grab x="180" y="64" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="70" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<tutorialText x="52" y="213" locale="en" text="Some stars require fast actions to be collected" width="245" />
+<tutorial09 x="43" y="250" locale="en" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ru">
+<tutorial09 x="65" y="259" locale="ru" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="80" y="213" locale="ru" text="Некоторые звезды пропадают если вы не достаточно быстры" width="200" />
+</layer>
+<layer name="Fr">
+<tutorialText x="54" y="208" locale="fr" text="Il est nécessaire d'agir rapidement pour collecter certaines étoiles" width="240" />
+<tutorial09 x="40" y="256" locale="fr" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorialText x="55" y="204" locale="de" text="Bei einigen Sternchen musst Du beim Einsammeln schnell sein" width="260" />
+<tutorial09 x="34" y="234" locale="de" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Zh">
+<tutorialText x="33" y="204" locale="zh" text="需要手疾眼快
+才能收集到某些星星
+
+" width="260" />
+<tutorial09 x="60" y="234" locale="zh" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ja">
+<tutorialText x="55" y="204" locale="ja" text="速く動かないと取れない
+スターもあります
+
+" width="260" />
+<tutorial09 x="60" y="234" locale="ja" moveSpeed="100" rotateSpeed="100" />
+</layer>
+</map>

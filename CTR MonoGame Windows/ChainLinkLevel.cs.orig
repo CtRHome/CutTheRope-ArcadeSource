@@ -1,0 +1,477 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Storage;
+using System.Xml;
+using Tao.Sdl;
+using System.Xml.Linq;
+
+namespace CTR_MonoGame
+{
+    class ChainLinkLevel : SingleLevel
+    {
+        int stage;
+
+        float introAnimationTimer, scoreAnimationTimer;
+		//SkipButton skipButton;
+		
+		public bool Skipped
+		{
+			get;
+			protected set;
+		}
+		
+        TextSprite bigFont, scoreFont, littleFont;
+        TopBannerSprite tbs;
+
+        public override int Score
+        {
+            get
+            {
+                return StarsGot * FCOptions.PointsPerStar + (gameOver && Victory && scoreAnimationTimer < 0 ?
+                    (int)Math.Max(FCOptions.MaxTimeBonusPoints - Math.Max(ElapsedTime - (FCOptions.ParTimePerLevel[LevelID] + (float)FCOptions.ParTimeOffset), 0) * FCOptions.PointsLostPerSecond, 0)
+                    : 0);
+            }
+        }
+
+        public int InstantScore
+        {
+            get
+            {
+                return StarsGot * FCOptions.PointsPerStar + (gameOver && Victory ?
+                    (int)Math.Max(FCOptions.MaxTimeBonusPoints - Math.Max(ElapsedTime - (FCOptions.ParTimePerLevel[LevelID] + (float)FCOptions.ParTimeOffset), 0) * FCOptions.PointsLostPerSecond, 0)
+                    : 0);
+            }
+        }
+
+        public ChainLinkLevel(Input input, ContentManager content, int boxNum, int levelNum)
+            : base(input, content, boxNum, levelNum)
+        {
+            introAnimationTimer = 2;
+            scoreAnimationTimer = 0;
+            bigFont = new TextSprite(content, true, 4);
+            scoreFont = new TextSprite(content, true, 1);
+			//skipButton = new SkipButton(content, 1);
+            littleFont = new TextSprite(content, false, 0.75f);
+            tbs = new TopBannerSprite(content);
+
+            if (LevelID == 0 || LevelID == 75)
+            {
+                int newBoxNum = 1;
+                if (LevelID == 0)
+                {
+                    newBoxNum = Util.SelectRandom(1, 2, 3, 6, 10);
+                }
+                else
+                {
+                    newBoxNum = Util.SelectRandom(4, 7, 8, 9, 11);
+                }
+                box = Box.GetBox(newBoxNum);
+                box.Load(content);
+                foreach (OMNOM omnom in omnoms)
+                {
+                    omnom.SetBox(box);
+                }
+            }
+
+        }
+
+        public void SetStage(int stage)
+        {
+            this.stage = stage;
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            float dT = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (introAnimationTimer > 0)
+            {
+                introAnimationTimer -= dT * 2;
+                return;
+            }
+
+            state.Camera.Update(gameTime, state);
+
+            if (!gameOver)
+            {
+                totalTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (TimeOut)
+                {
+                    SlayCandy(state.Candy);
+                    SlayCandy(state.Candy2);
+                }
+            }
+
+            for (int i = 0; i < hudStarSprites.Length; i++)
+            {
+                hudStarSprites[i].Update(gameTime);
+            }
+
+            for (int i = 0; i < stars.Length; i++)
+            {
+                if (stars[i] == null)
+                {
+                    continue;
+                }
+                stars[i].Update(gameTime, state);
+                if (!state.Candy.Spidered && !stars[i].Gone && !stars[i].Got && (state.Candy.Position - stars[i].Position).LengthSquared() <= 30 * 30 * SCALE * SCALE)
+                {
+                    GotStar(state.Candy, stars[i]);
+                }
+                else if (!stars[i].Gone && !stars[i].Got && state.Candy2 != null && !state.Candy2.Spidered && (state.Candy2.Position - stars[i].Position).LengthSquared() <= 30 * 30 * SCALE * SCALE)
+                {
+                    GotStar(state.Candy2, stars[i]);
+                }
+            }
+
+            pollen.Update(gameTime, state);
+
+            foreach (OMNOM omnom in omnoms)
+            {
+                omnom.Update(gameTime, state);
+
+                float omnomRadius = 115;// Clamp(115 / percentage, 45, 200);
+
+                if (gotCandy == null && !state.Candy.Spidered && !state.Candy.Half && (state.Candy.Position - omnom.Position).LengthSquared() <= omnomRadius * omnomRadius)
+                {
+                    CandyGot(omnom);
+                }
+            }
+
+
+            foreach (Record record in records)
+            {
+                record.Update(gameTime, state);
+            }
+
+            foreach (Bubble bubble in bubbles)
+            {
+                bubble.Update(gameTime, state);
+                if (!bubble.Released && (state.Candy.Position - bubble.Position).LengthSquared() <= (900 * SCALE * SCALE))
+                {
+                    bubble.Release();
+                    state.Candy.ActivateBubble(bubble);
+                }
+                if (!bubble.Released && state.Candy2 != null && (state.Candy2.Position - bubble.Position).LengthSquared() <= (900 * SCALE * SCALE))
+                {
+                    bubble.Release();
+                    state.Candy2.ActivateBubble(bubble);
+                }
+            }
+
+            foreach (Spike spike in spikes)
+            {
+                spike.Update(gameTime, state);
+                if (spike is RotoSpike)
+                {
+                    if ((spike as RotoSpike).ButtonPressed)
+                    {
+                        foreach (Spike sub in spikes)
+                        {
+                            if (sub is RotoSpike && (sub as RotoSpike).Group == (spike as RotoSpike).Group)
+                            {
+                                (sub as RotoSpike).Rotate();
+                            }
+                        }
+                    }
+                }
+                if (spike.IntersectsCandy(state.Candy.Position))
+                {
+                    BreakCandy(state.Candy);
+                }
+                if (state.Candy2 != null && spike.IntersectsCandy(state.Candy2.Position))
+                {
+                    BreakCandy(state.Candy2);
+                }
+            }
+
+            foreach (Pump pump in pumps)
+            {
+                pump.Update(gameTime, state);
+            }
+
+            foreach (GravityButton button in gravityButtons)
+            {
+                button.Update(gameTime, state);
+            }
+
+            foreach (MagicHat hat in hats)
+            {
+                hat.Update(gameTime, state);
+                if (hat.IntersectsCandy(state.Candy))
+                {
+                    TeleportFrom(state.Candy, hat);
+                }
+                if (state.Candy2 != null && hat.IntersectsCandy(state.Candy2))
+                {
+                    TeleportFrom(state.Candy2, hat);
+                }
+            }
+
+            foreach (Bouncer bouncer in bouncers)
+            {
+                bouncer.Update(gameTime, state);
+                if (bouncer.IntersectsCandy(state.Candy.Position))
+                {
+                    Bounce(state.Candy, bouncer);
+                }
+                if (state.Candy2 != null && bouncer.IntersectsCandy(state.Candy2.Position))
+                {
+                    Bounce(state.Candy2, bouncer);
+                }
+            }
+
+            if (gameTime.ElapsedGameTime.TotalSeconds < 0.5)
+            {
+                if (gotCandy != null)
+                {
+                    state.Candy.UpdateGot(gameTime, gotCandy.Position);
+                }
+                else
+                {
+                    state.Candy.Update(gameTime, state);
+                    if (FallenOffScreen(state.Candy))
+                    {
+                        if (state.Candy.HasBubble && BoxNum <= 2)
+                        {
+                            state.Candy.PopBubble();
+                        }
+                        else
+                        {
+                            EndGame(false);
+                        }
+                    }
+                }
+                if (state.Candy2 != null)
+                {
+                    state.Candy2.Update(gameTime, state);
+                    float candySep = (state.Candy2.Position - state.Candy.Position).Length();
+                    if (candyLinkLength > 0)
+                    {
+                        candyLinkLength -= 200 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                        candyLinkLength = Math.Min(candyLinkLength, candySep);
+                        if (candyLinkLength < 0)
+                        {
+                            state.Candy.JoinWith(state.Candy2);
+                            foreach (Grab grab in grabs)
+                            {
+                                if (grab.AttachedCandy == state.Candy2)
+                                {
+                                    grab.SetAttachedCandy(state.Candy);
+                                }
+                            }
+                            state.Candy2 = null;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < 30; i++)
+                            {
+                                Vector2 delta = state.Candy2.Physics.position - state.Candy.Physics.position;
+                                if (delta == Vector2.Zero)
+                                {
+                                    delta = Vector2.One;
+                                }
+
+                                float deltaLength = delta.Length();
+                                if (deltaLength < candyLinkLength)
+                                {
+                                    break;
+                                }
+                                float restLength = candyLinkLength;
+
+                                float diff = (deltaLength - restLength) / (Math.Max(1.0f, deltaLength) * (1.0f / state.Candy.Physics.mass + 1.0f / state.Candy2.Physics.mass));
+
+                                Vector2 other = delta;
+                                other *= diff / state.Candy2.Physics.mass;
+                                state.Candy2.Physics.position -= other;
+
+
+                                delta *= diff / state.Candy.Physics.mass;
+                                state.Candy.Physics.position += delta;
+                            }
+                        }
+                    }
+                    else if (candySep <= (30 * SCALE))
+                    {
+                        candyLinkLength = candySep;
+                    }
+                    if (state.Candy2 != null && FallenOffScreen(state.Candy2))
+                    {
+                        if (state.Candy2.HasBubble && BoxNum <= 2)
+                        {
+                            state.Candy2.PopBubble();
+                        }
+                        else
+                        {
+                            EndGame(false);
+                        }
+                    }
+                }
+
+                for (int i = cuts.Count - 1; i >= 0; i--)
+                {
+                    cuts[i].lifetime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    if (cuts[i].lifetime <= 0)
+                    {
+                        cuts.RemoveAt(i);
+                    }
+                }
+
+                foreach (Grab grab in grabs)
+                {
+                    grab.Update(gameTime, state);
+                    foreach (Cut cut in cuts)
+                    {
+                        grab.ApplyCut(cut);
+                    }
+                    if (grab.SpiderGotCandy)
+                    {
+                        SpiderWin(grab);
+                    }
+                }
+            }
+			
+            if (scoreAnimationTimer > 0)
+            {
+                scoreAnimationTimer -= dT * 1.2f;
+                return;
+            }
+
+            if (endTimer > 0)
+            {
+                endTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            ApplyInput();
+
+            if (LevelID == 0 || LevelID == 75)
+            {
+                handPos += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                handPos %= 3;
+                hand.SetAlpha(Math.Min(1, 10 * (0.5f - Math.Abs(handPos - 0.5f))));
+            }
+        }
+
+        protected override void EndGame(bool victory)
+        {
+            base.EndGame(victory);
+            if (victory)
+            {
+                scoreAnimationTimer = 3;
+            }
+        }
+
+        protected override void RecordData(bool victory)
+        {
+            if (LevelID >= 0)
+            {
+                FCOptions.SuspendWrites = true;
+
+                if (!victory)
+                {
+                    int[] dpl = FCOptions.DeathsPerLevel;
+                    dpl[LevelID]++;
+                    FCOptions.DeathsPerLevel = dpl;
+                }
+
+                double[] tpl = FCOptions.TimePerLevel;
+                tpl[LevelID] += totalTime;
+                FCOptions.TimePerLevel = tpl;
+
+                int[] spl = FCOptions.StarsPerLevel;
+                spl[LevelID] += StarsGot;
+                FCOptions.StarsPerLevel = spl;
+
+                int[] ppl = FCOptions.PlaysPerLevel;
+                ppl[LevelID]++;
+                FCOptions.PlaysPerLevel = ppl;
+
+                if (victory && StarsGot >= 3)
+                {
+                    if ((totalTime < FCOptions.FastestPerfectTimePerLevel[LevelID] || FCOptions.FastestPerfectTimePerLevel[LevelID] <= 0))
+                    {
+                        double[] ftpl = FCOptions.FastestPerfectTimePerLevel;
+                        ftpl[LevelID] = totalTime;
+                        FCOptions.FastestPerfectTimePerLevel = ftpl;
+                    }
+
+                    if (totalTime < FCOptions.ParTimePerLevel[LevelID])
+                    {
+                        float[] ptpl = FCOptions.ParTimePerLevel;
+                        ptpl[LevelID] = totalTime;
+                        FCOptions.ParTimePerLevel = ptpl;
+                    }
+
+                    int[] pppl = FCOptions.PerfectPlaysPerLevel;
+                    pppl[LevelID]++;
+                    FCOptions.PerfectPlaysPerLevel = pppl;
+                }
+
+                long[] popl = FCOptions.PointsPerLevel;
+                popl[LevelID] += InstantScore;
+                FCOptions.PointsPerLevel = popl;
+
+                FCOptions.SuspendWrites = false;
+            }
+        }
+
+        public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            base.Draw(gameTime, spriteBatch);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+            tbs.Draw(spriteBatch, Vector2.Zero, 0);
+            littleFont.Draw(spriteBatch, "Feed Candy to Om Nom", new Vector2(10, 140), TextSprite.Alignment.Left, Color.Black, -0.10f);
+            DrawHudStars(spriteBatch);
+            if (introAnimationTimer > 0)
+            {
+                if (introAnimationTimer > 1)
+                {
+                    bigFont.Draw(spriteBatch, "Level " + (stage + 1), new Vector2(540, 600), TextSprite.Alignment.Center, new Color(Color.White, introAnimationTimer - 1));
+                }
+                else
+                {
+                    bigFont.Draw(spriteBatch, "GO!", new Vector2(540, 800), TextSprite.Alignment.Center, new Color(Color.White, introAnimationTimer));
+                }
+            }
+            spriteBatch.End();
+            if (scoreAnimationTimer > 0 && scoreAnimationTimer <= 2)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+                scoreFont.SetScale(2);
+
+                bool perfect = StarsGot >= 3 && ElapsedTime < (FCOptions.ParTimePerLevel[LevelID] + (float)FCOptions.ParTimeOffset);
+
+                if (perfect)
+                {
+                    scoreFont.Draw(spriteBatch, "Perfect!", new Vector2(540, 1000), TextSprite.Alignment.Center, new Color(Color.White, Math.Min(scoreAnimationTimer, 1)));
+                }
+
+                scoreFont.Draw(spriteBatch, "Time Bonus:", new Vector2(540, 600), TextSprite.Alignment.Center, new Color(Color.White, Math.Min(scoreAnimationTimer, 1)));
+                Vector2 position = new Vector2(540, 800);
+                if (scoreAnimationTimer < 1)
+                {
+                    scoreFont.SetScale(2 * scoreAnimationTimer);
+                    position = Vector2.Lerp(new Vector2(1080, -200), new Vector2(540, 800), scoreAnimationTimer);
+                }
+                scoreFont.Draw(spriteBatch, "" + (int)Math.Max(FCOptions.MaxTimeBonusPoints - Math.Max(ElapsedTime - (FCOptions.ParTimePerLevel[LevelID] + (float)FCOptions.ParTimeOffset), 0) * FCOptions.PointsLostPerSecond, 0), position, TextSprite.Alignment.Center, Color.White);
+
+
+                spriteBatch.End();
+            }
+        }
+
+        override protected void DrawHudStars(SpriteBatch spriteBatch)
+        {
+            for (int i = 0; i < hudStarSprites.Length; i++)
+            {
+                hudStarSprites[i].Draw(spriteBatch, new Vector2(400 + 80 * i, 70), 0);
+            }
+        }
+    }
+}

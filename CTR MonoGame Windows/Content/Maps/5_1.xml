@@ -1,0 +1,45 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="true" ropePhysicsSpeed="1" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<candyL x="101" y="170" />
+<candyR x="232" y="171" />
+<grab x="164" y="146" length="150" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="R" hidePath="false" />
+<target x="165" y="428" />
+<star x="187" y="327" timeout="-1" />
+<grab x="227" y="58" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="R" hidePath="false" />
+<grab x="98" y="59" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="164" y="146" length="150" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<tutorialText x="79" y="219" locale="en" text="Combine two pieces of candy before feeding it to Om Nom" width="200" />
+<tutorial09 x="55" y="267" locale="en" moveSpeed="100" rotateSpeed="100" />
+<star x="139" y="328" timeout="-1" />
+<star x="163" y="369" timeout="-1" />
+</layer>
+<layer name="Ru">
+<tutorialText x="79" y="219" locale="ru" text="Соедините половинки леденца прежде чем скормить его АмНяму" width="200" />
+<tutorial09 x="55" y="267" locale="ru" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Fr">
+<tutorialText x="79" y="219" locale="fr" text="Associe deux morceaux de bonbon avant de le donner à Om Nom pour qu'il le mange" width="200" />
+<tutorial09 x="55" y="267" locale="fr" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorialText x="56" y="220" locale="de" text="Bring zwei Bonbons zusammen, bevor Du sie an Om Nom verfütterst" width="210" />
+<tutorial09 x="39" y="268" locale="de" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Zh">
+<tutorialText x="50" y="231" locale="zh" text="在喂给 Om Nom 吃之前，
+将两块糖盒二为一
+
+" width="210" />
+<tutorial09 x="39" y="268" locale="zh" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ja">
+<tutorialText x="42" y="230" locale="ja" text="Om Nomに与える前にキャンディーの
+つの部分を組立てましょう
+" width="280" />
+<tutorial09 x="18" y="268" locale="ja" moveSpeed="100" rotateSpeed="100" />
+</layer>
+</map>

@@ -1,0 +1,307 @@
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Linq;
+
+namespace CTR_MonoGame
+{
+    class ChainLevel : ILevel
+    {
+        enum Mode { Play, Bonus, Victory };
+
+        Mode mode;
+
+        ChainLinkLevel[] levels;
+        RedemptionLevel bonusLevel;
+        int activeLevel;
+        TopBannerSprite tbs;
+        TextSprite font, smallFont;
+        StarSprite starSprite;
+
+        int scoreEarned;
+
+        int dispensedTickets;
+
+        bool gameOver;
+
+        public bool GameOver
+        {
+            get { return gameOver; }
+        }
+
+        public int StarsGot
+        {
+            get { return (from l in levels select l.StarsGot).Sum(); }
+        }
+
+        public float[] Times
+        {
+            get { return (from l in levels select l.ElapsedTime).ToArray(); }
+        }
+
+        public bool Victory
+        {
+            get;
+            protected set;
+        }
+
+        public int OmNomsFed
+        {
+            get
+            {
+                return (from l in levels where l.Victory select l).Count();
+            }
+        }
+
+        Input input;
+        Victory victoryScreen;
+        ContentManager content;
+        TransitionManager transition;
+        int walkthroughFrameCount;
+
+        public ChainLevel(Input input, ContentManager content, int[] levelList, ITransitionable attract)
+        {
+            this.content = content;
+
+            SingleLevel.ShownObstacles.Clear();
+
+            levels = (from l in levelList select new ChainLinkLevel(input, content, l / 25 + 1, l % 25 + 1)).ToArray();
+
+            for (int i = 0; i < levels.Length; i++)
+            {
+                levels[i].SetStage(i);
+            }
+
+            tbs = new TopBannerSprite(content);
+
+            font = new TextSprite(content, true);
+            smallFont = new TextSprite(content, false);
+
+            this.input = input;
+
+            victoryScreen = new Victory(content, input);
+
+            //activeLevel = 4;
+            //walkthrough = new Attract(content, input, levels[activeLevel].BoxNum, levels[activeLevel].LevelNum);
+            //mode = Mode.Walkthrough;
+
+            transition = new TransitionManager(content);
+            transition.Transition(attract, levels[activeLevel]);
+
+            starSprite = new StarSprite(content);
+
+            bonusLevel = new RedemptionLevel(input, content);
+        }
+
+        public void UpdateTransition(GameTime gameTime)
+        {
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            if (!transition.Done)
+            {
+                FCOptions.SuspendWrites = false;
+                transition.Update(gameTime);
+            }
+            else
+            {
+                switch (mode)
+                {
+                    default:
+                    case Mode.Play:
+                        levels[activeLevel].Update(gameTime);
+
+                        int targetScore = levels.Select(l => l.Score).Sum();
+                        int scoreStep = 11;
+                        while (targetScore > scoreEarned + scoreStep * 10)
+                        {
+                            scoreStep *= 2;
+                        }
+                        if (Math.Abs(targetScore - scoreEarned) < scoreStep)
+                        {
+                            scoreEarned = targetScore;
+                        }
+                        else
+                        {
+                            scoreEarned += Math.Sign(targetScore - scoreEarned) * scoreStep;
+                        }
+
+                        if (FCOptions.InstantPayout)
+                        {
+                            FCOptions.SuspendWrites = true;
+                            if (FCOptions.FixedTickets)
+                            {
+                                dispensedTickets = FCOptions.FixedTicketsPerGame;
+                                if (FCOptions.UseTickets)
+                                {
+                                    input.IOBoard.GiveTickets(FCOptions.FixedTicketsPerGame);
+                                    FCOptions.TotalTicketsOut += (ulong)FCOptions.FixedTicketsPerGame;
+                                }
+                            }
+                            else if (scoreEarned > (dispensedTickets + 1) * FCOptions.TicketMultiplier * FCOptions.PointsPerTicket)
+                            {
+                                dispensedTickets++;
+                                if (FCOptions.UseTickets)
+                                {
+                                    input.IOBoard.GiveTickets(1);
+                                    FCOptions.TotalTicketsOut++;
+                                }
+                            }
+                        }
+
+                        if (levels[activeLevel].GameOver)
+                        {
+                            victoryScreen.AddScore(levels[activeLevel].StarsGot, levels[activeLevel].Score, levels[activeLevel].Victory, activeLevel);
+
+                            CTRGame.RecentlyPlayedLevels.Add(levels[activeLevel].LevelID);
+                            while (CTRGame.RecentlyPlayedLevels.Count > 30)
+                            {
+                                CTRGame.RecentlyPlayedLevels.RemoveAt(0);
+                            }
+
+                            if (activeLevel == levels.Length - 1)
+                            {
+                                if (OmNomsFed >= levels.Length)
+                                {
+                                    FCOptions.ThreeFedOmNoms++;
+                                }
+
+                                if (OmNomsFed >= levels.Length && FCOptions.EnableBonusLevel)
+                                {
+                                    mode = Mode.Bonus;
+                                    transition.BonusTransition(levels[activeLevel], bonusLevel);
+                                }
+                                else
+                                {
+                                    mode = Mode.Victory;
+                                    transition.Transition(levels[activeLevel], victoryScreen);
+                                    victoryScreen.SetDispensedTickets(dispensedTickets);
+                                    CTRGame.PlayVictoryMusic();
+                                }
+                            }
+                            else
+                            {
+                                activeLevel++;
+                                int l = CTRGame.GetChainLevelNum(activeLevel, levels[activeLevel - 1].InstantScore);
+                                levels[activeLevel] = new ChainLinkLevel(input, content, l / 25 + 1, l % 25 + 1);
+                                levels[activeLevel].SetStage(activeLevel);
+                                transition.Transition(levels[activeLevel - 1], levels[activeLevel]);
+                                mode = Mode.Play;
+                                scoreEarned = 0;
+                            }
+
+                        }
+                        break;
+                    case Mode.Bonus:
+                        bonusLevel.Update(gameTime);
+                        if (bonusLevel.GameOver)
+                        {
+                            victoryScreen.AddBonus(bonusLevel.OmNomValue);
+                            if (FCOptions.InstantPayout)
+                            {
+                                FCOptions.SuspendWrites = true;
+                                if (!FCOptions.FixedTickets)
+                                {
+                                    dispensedTickets += bonusLevel.OmNomValue / FCOptions.TicketMultiplier;
+                                    if (FCOptions.UseTickets)
+                                    {
+                                        input.IOBoard.GiveTickets(bonusLevel.OmNomValue / FCOptions.TicketMultiplier);
+                                        FCOptions.TotalTicketsOut += (ulong)(bonusLevel.OmNomValue / FCOptions.TicketMultiplier);
+                                    }
+                                }
+                            }
+
+                            mode = Mode.Victory;
+                            transition.Transition(bonusLevel, victoryScreen);
+                            victoryScreen.SetDispensedTickets(dispensedTickets);
+                            CTRGame.PlayVictoryMusic();
+                        }
+                        break;
+                    case Mode.Victory:
+                        victoryScreen.Update(gameTime);
+                        if (victoryScreen.Done)
+                        {
+                            gameOver = true;
+                            Victory = true;
+                        }
+                        break;
+                }
+            }
+        }
+
+        public int GetStarsGot(int level)
+        {
+            return levels[level].StarsGot;
+        }
+
+        public ILevel Reset()
+        {
+            levels[activeLevel] = (ChainLinkLevel)levels[activeLevel].Reset();
+            gameOver = false;
+            Victory = false;
+            return this;
+        }
+
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            if (transition.Done)
+            {
+                switch (mode)
+                {
+                    default:
+                    case Mode.Play:
+                        levels[activeLevel].Draw(gameTime, spriteBatch);
+                        break;
+                    case Mode.Bonus:
+                        bonusLevel.Draw(gameTime, spriteBatch);
+                        break;
+                    case Mode.Victory:
+                        victoryScreen.Draw(gameTime, spriteBatch);
+                        break;
+                }
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, Matrix.CreateScale(0.5f));
+                if (mode == Mode.Play)
+                {
+                    font.Draw(spriteBatch, "Score:", new Vector2(630, 20));
+                    font.Draw(spriteBatch, "" + scoreEarned, new Vector2(850, 20));
+                    starSprite.DrawTimer(spriteBatch, new Vector2(250, 80), levels[activeLevel].ElapsedTime / (float)FCOptions.TimeLimit);
+                    font.Draw(spriteBatch, "Time:", new Vector2(10, 20));
+                    float timeLeft = FCOptions.TimeLimit - levels[activeLevel].ElapsedTime;
+                    if (timeLeft > 5 || (int)(timeLeft * 4) % 2 == 0)
+                    {
+                        font.Draw(spriteBatch, Math.Max((int)Math.Ceiling(timeLeft), 0).ToString(), new Vector2(250, 20), TextSprite.Alignment.Center);
+                    }
+                }
+                if (mode == Mode.Bonus)
+                {
+                    starSprite.DrawTimer(spriteBatch, new Vector2(250, 80), bonusLevel.ElapsedTime / (float)FCOptions.TimeLimit);
+                    font.Draw(spriteBatch, "Time:", new Vector2(10, 20));
+                    float timeLeft = FCOptions.TimeLimit - bonusLevel.ElapsedTime;
+                    if (timeLeft > 5 || (int)(timeLeft * 4) % 2 == 0)
+                    {
+                        font.Draw(spriteBatch, Math.Max((int)Math.Ceiling(timeLeft), 0).ToString(), new Vector2(250, 20), TextSprite.Alignment.Center);
+                    }
+                }
+                spriteBatch.End();
+            }
+            else
+            {
+                transition.Draw(gameTime, spriteBatch);
+            }
+            if (input.IOBoard.TicketError && FCOptions.TicketsOwed > 0)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, Matrix.CreateScale(0.5f));
+                font.Draw(spriteBatch, FCOptions.TicketName + " Error! Owed " + (FCOptions.TicketsOwed * FCOptions.TicketMultiplier) + " " + FCOptions.TicketName + "s", new Vector2(50, 1800), TextSprite.Alignment.Left, Color.Red);
+                spriteBatch.End();
+            }
+        }
+
+        public void DrawMiniMap(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+        }
+
+
+    }
+}

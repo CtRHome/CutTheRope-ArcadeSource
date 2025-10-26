@@ -1,0 +1,39 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<candy x="63" y="376" />
+<target x="68" y="101" />
+<star x="177" y="185" timeout="-1" />
+<star x="162" y="376" timeout="-1" />
+<star x="271" y="106" timeout="-1" />
+<grab x="65" y="239" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="200" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<bubble x="266" y="377" />
+<tutorialText x="77" y="255" locale="en" text="Some rope hooks can be moved with your finger" width="200" />
+<tutorial04 x="43" y="282" locale="en" angle="130" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ru">
+<tutorial04 x="43" y="283" locale="ru" angle="130" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="76" y="254" locale="ru" text="Такие крепежи можно двигать пальцем" width="200" />
+</layer>
+<layer name="Fr">
+<tutorial04 x="43" y="283" locale="fr" angle="130" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="47" y="247" locale="fr" text="Tu peux déplacer certains crochets de corde avec ton doigt" width="220" />
+</layer>
+<layer name="De">
+<tutorial04 x="44" y="282" locale="de" angle="130" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="37" y="251" locale="de" text="Einige Seilhaken kannst Du mit dem Finger verschieben" width="200" />
+</layer>
+<layer name="Zh">
+<tutorial04 x="44" y="282" locale="zh" angle="130" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="51" y="282" locale="zh" text="可用你的手指移动一些绳钩
+" width="200" />
+</layer>
+<layer name="Ja">
+<tutorial04 x="44" y="283" locale="ja" angle="130" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="37" y="269" locale="ja" text="指で動かすことのできる
+ロープフックもあります" width="200" />
+</layer>
+</map>

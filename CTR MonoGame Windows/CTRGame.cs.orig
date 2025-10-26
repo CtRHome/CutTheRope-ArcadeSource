@@ -1,0 +1,657 @@
+﻿#region Using Statements
+using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Storage;
+using Microsoft.Xna.Framework.GamerServices;
+using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
+using Tao.Sdl;
+using System.Linq;
+#endregion
+
+namespace CTR_MonoGame
+{
+    /// <summary>
+    /// This is the main type for your game
+    /// </summary>
+    public class CTRGame : Game
+    {
+        enum Mode { Attract, Options, GameObjectives, ObstacleWarning, Game, Victory, Editor };
+
+        public static int[] chainLevelNums = new int[] { 0, 5, 179 };
+
+        public const bool LEVEL_TEST = false;
+        int testLevel = 0;
+
+ 		static Random R = new Random();
+		GraphicsDeviceManager graphics;
+        SpriteBatch spriteBatch;
+        ILevel level;
+        Input Input;
+        Attract attract;
+        Mode _mode;
+        Mode mode
+        {
+            get
+            {
+                return _mode;
+            }
+            set
+            {
+                if (_mode != value)
+                {
+                    LeaveMode(_mode);
+                    _mode = value;
+                    EnterMode(_mode);
+                }
+            }
+        }
+
+        TextSprite font;
+        OptionsScreen optionsScreen;
+        GameObjectives gameObjectives;
+        ObstacleWarning obstacleWarning;
+        Victory victory;
+        TopBannerSprite tbs;
+        Texture2D shade;
+        float repeatTimer, attractSparkleTimer, keepAliveTimer;
+        List<StarDisappearSprite> attractSparkles;
+        List<Vector2> attractSparklePositions;
+
+
+        static IntPtr[] gameMusic;
+        static IntPtr menuMusic, victoryMusic;
+
+        public const int MAX_LOADABLE_LEVEL = 275;
+
+        static CTRGame()
+        {
+            gameMusic = new IntPtr[5];
+            gameMusic[0] = SdlMixer.Mix_LoadMUS("Content/game_music1.ogg");
+            if (gameMusic[0] != IntPtr.Zero)
+            {
+                if (SdlMixer.Mix_OpenAudio(44100, (short)Sdl.AUDIO_S16SYS, 2, 1024) < 0)
+                {
+                    Console.WriteLine(Sdl.SDL_GetError());
+                }
+            }
+            gameMusic[1] = SdlMixer.Mix_LoadMUS("Content/game_music2.ogg");
+            gameMusic[2] = SdlMixer.Mix_LoadMUS("Content/game_music3.ogg");
+            gameMusic[3] = SdlMixer.Mix_LoadMUS("Content/game_music4.ogg");
+            gameMusic[4] = SdlMixer.Mix_LoadMUS("Content/game_music5.ogg");
+            menuMusic = SdlMixer.Mix_LoadMUS("Content/menu_music.ogg");
+            victoryMusic = SdlMixer.Mix_LoadMUS("Content/menu_music2_clipped.ogg");
+        }
+
+        public static void PlayGameMusic()
+        {
+            if (Util.OnDevice && SdlMixer.Mix_PlayMusic(gameMusic[R.Next(5)], -1) < 0)
+            {
+                Console.WriteLine(Sdl.SDL_GetError());
+            }
+        }
+
+        public static void PlayMenuMusic()
+        {
+            if (Util.OnDevice && SdlMixer.Mix_PlayMusic(menuMusic, 1) < 0)
+            {
+                Console.WriteLine(Sdl.SDL_GetError());
+            }
+        }
+
+        public static void PlayVictoryMusic()
+        {
+            if (Util.OnDevice && SdlMixer.Mix_PlayMusic(victoryMusic, 1) < 0)
+            {
+                Console.WriteLine(Sdl.SDL_GetError());
+            }
+        }
+
+        public CTRGame()
+            : base()
+        {
+            graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferWidth = 1080;
+            graphics.PreferredBackBufferHeight = 1920;
+            //graphics.SynchronizeWithVerticalRetrace = true;
+            graphics.IsFullScreen = true;
+            IsMouseVisible = !Util.OnDevice;
+            this.IsFixedTimeStep = true;
+            Input = new Input();
+            Window.Title = "ICE Cut the Rope | Press SPACE To Play!";
+            Content.RootDirectory = "Content";
+        }
+
+        /// <summary>
+        /// Allows the game to perform any initialization it needs to before starting to run.
+        /// This is where it can query for any required services and load any non-graphic
+        /// related content.  Calling base.Initialize will enumerate through any components
+        /// and initialize them as well.
+        /// </summary>
+        protected override void Initialize()
+        {
+            // TODO: Add your initialization logic here
+            base.Initialize();
+        }
+
+        /// <summary>
+        /// LoadContent will be called once per game and is the place to load
+        /// all of your content.
+        /// </summary>
+        protected override void LoadContent()
+        {
+            font = new TextSprite(Content, true);
+            // Create a new SpriteBatch, which can be used to draw textures.
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            if (Util.OnDevice)
+            {
+                
+            }
+
+            optionsScreen = new OptionsScreen(Content, Input);
+
+            obstacleWarning = new ObstacleWarning(Content, Input);
+
+            attract = new Attract(Content, Input);
+
+            tbs = new TopBannerSprite(Content);
+
+            shade = Content.Load<Texture2D>("menu_drawings_bigpage_markers_hd");
+
+            Input.IOBoard.SetLockout(true);
+            SetVolume();
+
+            attractSparkles = new List<StarDisappearSprite>();
+            attractSparklePositions = new List<Vector2>();
+
+            mode = Mode.Attract;
+			
+            LoadTestLevel();
+
+            if (LEVEL_TEST)
+            {
+                _mode = Mode.Game;
+                testLevel = 10*25+11;// 9 * 25;
+                level = new SingleLevel(Input, Content, (testLevel / 25) + 1, (testLevel % 25) + 1);
+            }
+        }
+
+        private void EnterMode(Mode m)
+        {
+            SetVolume();
+            switch (m)
+            {
+                case Mode.Attract:
+                    attract = new Attract(Content, Input);
+                    Input.IOBoard.SetLockout(true);
+                    repeatTimer = 3;
+                    break;
+                case Mode.Options:
+                    break;
+                case Mode.GameObjectives:
+                    gameObjectives = new GameObjectives(Content, Input);
+                    break;
+                case Mode.ObstacleWarning:
+                    obstacleWarning = new ObstacleWarning(Content, Input);
+                    break;
+                case Mode.Game:
+                    PlayGameMusic();
+					SetChainLevelNums();
+                    level = new ChainLevel(Input, Content, chainLevelNums, FCOptions.ShowWarnings ? obstacleWarning : FCOptions.ShowObjectives ? gameObjectives : attract as ITransitionable);
+                    FCOptions.TotalGamesPlayed++;
+                    Input.IOBoard.SetStarLights(false, false, false);
+					break;
+                case Mode.Victory:
+                    victory = new Victory(Content, Input, 3, 1);
+                    break;
+                case Mode.Editor:
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void LeaveMode(Mode m)
+        {
+            switch (m)
+            {
+                case Mode.Attract:
+                    Input.IOBoard.SetLockout(false);
+                    break;
+                case Mode.Options:
+                    break;
+                case Mode.ObstacleWarning:
+                    break;
+                case Mode.Game:
+                    break;
+                case Mode.Editor:
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void SetVolume()
+        {
+            if (mode == Mode.Attract)
+            {
+                SdlMixer.Mix_Volume(-1, (int)(1.28f * FCOptions.AttractVolume));
+                SdlMixer.Mix_VolumeMusic((int)(1.28f * FCOptions.AttractVolume));
+            }
+            else
+            {
+                SdlMixer.Mix_Volume(-1, (int)(1.28f * FCOptions.GameVolume));
+                SdlMixer.Mix_VolumeMusic((int)(1.28f * FCOptions.GameVolume));
+            }
+        }
+
+        /// <summary>
+        /// UnloadContent will be called once per game and is the place to unload
+        /// all content.
+        /// </summary>
+        protected override void UnloadContent()
+        {
+            // TODO: Unload any non ContentManager content here
+        }
+
+        /// <summary>
+        /// Allows the game to run logic such as updating the world,
+        /// checking for collisions, gathering input, and playing audio.
+        /// </summary>
+        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+        protected override void Update(GameTime gameTime)
+        {
+            Input.Update();
+
+            if (Input.KeyJustPressed(Keys.Escape))
+            {
+                Input.IOBoard.SetLockout(false);
+                Exit();
+            }
+
+            if (keepAliveTimer < 0)
+            {
+                keepAliveTimer = 30;
+                Console.Write(DateTime.Now.ToLongDateString());
+                Console.WriteLine(DateTime.Now.ToLongTimeString());
+            }
+            else
+            {
+                keepAliveTimer -= (float)gameTime.ElapsedRealTime.TotalSeconds;
+            }
+
+            if (Input.IOBoard.Diag || Input.KeyJustPressed(Keys.D))
+            {
+                mode = Mode.Options;
+            }
+
+            if (!Util.OnDevice && Input.KeyJustPressed(Keys.E))
+            {
+                mode = Mode.Editor;
+            }
+
+            if (Input.IOBoard.Coin1 || (mode == Mode.Attract && Input.KeyJustPressed(Keys.Space)))
+            {
+                FCOptions.Credits += FCOptions.Coin1;
+                FCOptions.PulsesIn++;
+                Input.IOBoard.AddCoinCounter(1);
+            }
+            if (Input.IOBoard.Coin2)
+            {
+                FCOptions.Credits += FCOptions.Coin2;
+                FCOptions.PulsesIn++;
+                Input.IOBoard.AddCoinCounter(1);
+            }
+            if (Input.IOBoard.DBV)
+            {
+                FCOptions.Credits += FCOptions.DBV;
+                FCOptions.PulsesIn++;
+                Input.IOBoard.AddCoinCounter((int)(FCOptions.DBV / FCOptions.Coin1));
+            }
+
+            if (Input.IOBoard.Test)
+            {
+                FCOptions.Credits += FCOptions.GameCost;
+            }
+
+            if (FCOptions.MaxCreditsAllowed > 0 && FCOptions.Credits > FCOptions.MaxCreditsAllowed * FCOptions.GameCost)
+            {
+                FCOptions.Credits = FCOptions.MaxCreditsAllowed * FCOptions.GameCost;
+            }
+            if (Input.IOBoard.Up)
+            {
+                if (mode == Mode.Attract)
+                {
+                    FCOptions.AttractVolume += 10;
+                }
+                else if(mode != Mode.Options)
+                {
+                    FCOptions.GameVolume += 10;
+                }
+                SetVolume();
+            } 
+            if (Input.IOBoard.Down)
+            {
+                if (mode == Mode.Attract)
+                {
+                    FCOptions.AttractVolume -= 10;
+                }
+                else if(mode != Mode.Options)
+                {
+                    FCOptions.GameVolume -= 10;
+                }
+                SetVolume();
+            }
+
+
+            switch (mode)
+            {
+                case Mode.Editor:
+                    break;
+                case Mode.Attract:
+                    attract.Update(new GameTime(gameTime.TotalGameTime, TimeSpan.FromSeconds(1.0 / 60.0)));
+                    repeatTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    if (FCOptions.Credits >= FCOptions.GameCost)
+                    {
+                        FCOptions.Credits -= FCOptions.GameCost;
+                        if (FCOptions.ShowObjectives)
+                        {
+                            mode = Mode.GameObjectives;
+                        }
+                        else if (FCOptions.ShowWarnings)
+                        {
+                            mode = Mode.ObstacleWarning;
+                        }
+                        else
+                        {
+                            mode = Mode.Game;
+                        }
+                        if (repeatTimer > 0)
+                        {
+                            FCOptions.RepeatGames++;
+                        }
+                    }
+                    if (attractSparkleTimer > 0)
+                    {
+                        attractSparkleTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    }
+                    else
+                    {
+                        attractSparkleTimer = 0.1f;
+                        attractSparkles.Add(new StarDisappearSprite(Content));
+                        attractSparklePositions.Add(new Vector2(340 + Util.R.Next(400), 1850));
+                    }
+                    for (int i = attractSparkles.Count - 1; i >= 0; i--)
+                    {
+                        attractSparkles[i].Update(new GameTime(gameTime.TotalGameTime, TimeSpan.FromSeconds(1.0 / 60.0)));
+                        if (attractSparkles[i].currentAnimation < 0)
+                        {
+                            attractSparkles.RemoveAt(i);
+                            attractSparklePositions.RemoveAt(i);
+                        }
+                    }
+                    break;
+                case Mode.GameObjectives:
+                    gameObjectives.Update(new GameTime(gameTime.TotalGameTime, TimeSpan.FromSeconds(1.0 / 60.0)));
+                    if (gameObjectives.Done)
+                    {
+                        if (FCOptions.ShowWarnings)
+                        {
+                            mode = Mode.ObstacleWarning;
+                        }
+                        else
+                        {
+                            mode = Mode.Game;
+                        }
+                    }
+                    break;
+                case Mode.ObstacleWarning:
+                    obstacleWarning.Update(new GameTime(gameTime.TotalGameTime, TimeSpan.FromSeconds(1.0 / 60.0)));
+                    if (obstacleWarning.Done)
+                    {
+                        mode = Mode.Game;
+                    }
+                    break;
+                case Mode.Options:
+                    optionsScreen.Update(gameTime);
+                    if (optionsScreen.Done)
+                    {
+                        mode = Mode.Attract;
+                    }
+                    break;
+                case Mode.Game:
+                    if (LEVEL_TEST)
+                    {
+                        if (Input.KeyJustPressed(Keys.Space) || (level.GameOver && level.Victory))
+                        {
+                            testLevel++;
+                            level = new SingleLevel(Input, Content, (testLevel / 25) + 1, (testLevel % 25) + 1);
+                        }
+                        if (Input.KeyJustPressed(Keys.R) || (level.GameOver && !level.Victory))
+                        {
+                            level = level.Reset();
+                        }
+                    }
+                    else
+                    {
+                        if (level.GameOver)
+                        {
+                            if (level is ChainLevel)
+                            {
+                                mode = Mode.Attract;
+                            }
+                            else
+                            {
+                                mode = Mode.Victory;
+                                LoadTestLevel();
+                            }
+                        }
+                        if (Input.KeyJustPressed(Keys.R))
+                        {
+                            level = level.Reset();
+                        }
+                    }
+
+                    level.Update(new GameTime(gameTime.TotalGameTime, TimeSpan.FromSeconds(1.0 / 60.0)));
+
+                    break;
+                case Mode.Victory:
+                    victory.Update(new GameTime(gameTime.TotalGameTime, TimeSpan.FromSeconds(1.0 / 60.0)));
+                    if (victory.Done)
+                    {
+                        mode = Mode.Attract;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            base.Update(gameTime);
+        }
+
+        public static readonly int[][] Levels = new int[][]{
+			new int[] {0, 75},
+		    new int[] {1,2,3,4,5,9,50,175,179,188},
+		    new int[] {6,7,8,11,12,15,16,17,25,26,27,31,41,76,125,128,152,176,177,178,180,181,193,200,201,226,227},
+		    new int[] {10,13,18,20,29,32,34,37,39,43,46,48,49,52,53,54,55,58,62,65,77,81,86,87,89,126,132,150,153,165,191,203,206,210,214,218,225,232,233,239},
+		    new int[] {33,38,40,44,45,51,57,63,64,67,73,90,99,136,155,161,163,168,219,220,228,240}};
+
+		private void SetChainLevelNums()
+		{
+            chainLevelNums[0] = Util.SelectRandom(Levels[0]);
+            chainLevelNums[1] = Util.SelectRandom(Levels[1].Concat(Levels[2]).ToArray());
+            chainLevelNums[2] = Util.SelectRandom(Levels[3].Concat(Levels[4]).ToArray());
+		}
+
+        public static List<int> RecentlyPlayedLevels = new List<int>();
+
+        public static int GetChainLevelNum(int level, int previousScore)
+        {
+            bool allEasyLevelsRecent = true;
+            for (int i = 0; i < Levels[1].Length; i++)
+            {
+                if (!RecentlyPlayedLevels.Contains(Levels[1][i]))
+                {
+                    allEasyLevelsRecent = false;
+                    break;
+                }
+            }
+            if (allEasyLevelsRecent)
+            {
+                for (int i = 0; i < Levels[1].Length; i++)
+                {
+                    RecentlyPlayedLevels.Remove(Levels[1][i]);
+                }
+            }
+
+            int rVal = 0;
+            if (level == 1)
+            {
+                do
+                {
+                    if (previousScore < FCOptions.Stage2Med)
+                    {
+                        rVal = Util.SelectRandom(Levels[1]);
+                    }
+                    else
+                    {
+                        rVal = Util.SelectRandom(Levels[2]);
+                    }
+                } while (RecentlyPlayedLevels.Contains(rVal));
+            }
+            else if (level == 2)
+            {
+                do
+                {
+                    int difficulty = Get3rdLevelDifficulty(Levels[1].Contains(chainLevelNums[1]), previousScore);
+                    rVal = Util.SelectRandom(Levels[difficulty]);                    
+                } while (rVal == chainLevelNums[1] || RecentlyPlayedLevels.Contains(rVal));
+            }
+            chainLevelNums[level] = rVal;
+            return rVal;
+        }
+
+        private static int Get3rdLevelDifficulty(bool stage2Easy, int previousScore)
+        {
+            int rVal = 1;
+            if (stage2Easy)
+            {
+                if (previousScore < FCOptions.Stage2EasyStage3Med)
+                {
+                    rVal = 1;
+                }
+                else if (previousScore < FCOptions.Stage2EasyStage3Hard)
+                {
+                    rVal = 2;
+                }
+                else
+                {
+                    rVal = 3;
+                }
+            }
+            else
+            {
+                if (previousScore < FCOptions.Stage2MedStage3Hard)
+                {
+                    rVal = 2;
+                }
+                else if (previousScore < FCOptions.Stage2MedStage3Hardest)
+                {
+                    rVal = 3;
+                }
+                else
+                {
+                    rVal = 4;
+                }
+            }
+            if (OptionsScreen.CurrentPayoutPCT() < 0.8M * FCOptions.PayoutPCT && rVal > 1)
+            {
+                rVal--;
+            }
+            if (OptionsScreen.CurrentPayoutPCT() > 1.2M * FCOptions.PayoutPCT && rVal < 4)
+            {
+                rVal++;
+            }
+            return rVal;
+        }
+		
+        private void LoadTestLevel()
+        {
+            /*
+            mode = Mode.Game;
+            level = new SingleLevel(Input, Content, 11, 12);
+            //*/
+        }
+
+        /// <summary>
+        /// This is called when the game should draw itself.
+        /// </summary>
+        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+        protected override void Draw(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(Color.White);
+
+            switch (mode)
+            {
+                case Mode.Editor:
+                    break;
+                case Mode.Attract:
+                    attract.Draw(gameTime, spriteBatch);
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+                    if (!attract.BonusMode)
+                    {
+                        for (int i = 0; i < attractSparkles.Count; i++)
+                        {
+                            attractSparkles[i].Draw(spriteBatch, attractSparklePositions[i], 0);
+                        }
+                    }
+                    font.SetScale(1.25f - (float)Math.Abs(Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2f)) / 8);
+                    if (FCOptions.SwipeCard)
+                    {
+                        font.Draw(spriteBatch, "Swipe Card", new Vector2(540, 1750), TextSprite.Alignment.Center);
+                    }
+                    else
+                    {
+                        font.Draw(spriteBatch, "Insert " + FCOptions.Currency.ToString() + "(s) " + (int)(FCOptions.Credits / FCOptions.CurrencyUnitValue) + "/" + (int)(FCOptions.GameCost / FCOptions.CurrencyUnitValue),
+                            new Vector2(540, 1750), TextSprite.Alignment.Center);
+                    }
+                    spriteBatch.End();
+                    break;
+                case Mode.Options:
+                    optionsScreen.Draw(gameTime, spriteBatch);
+                    break;
+                case Mode.ObstacleWarning:
+                    obstacleWarning.Draw(gameTime, spriteBatch);
+                    break;
+                case Mode.GameObjectives:
+                    gameObjectives.Draw(gameTime, spriteBatch);
+                    break;
+                case Mode.Game:
+                    level.Draw(gameTime, spriteBatch);
+                    /*spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+                    //tbs.Draw(spriteBatch, Vector2.Zero, 0);
+                    //spriteBatch.Draw(shade, new Rectangle(0, 0, 120, 1920), Color.Gray);
+                    foreach (LifeCandy lc in lifeCandies)
+                    {
+                        lc.Draw(spriteBatch, Vector2.Zero);
+                    }
+                    spriteBatch.End();*/
+                    //level.DrawMiniMap(gameTime, spriteBatch);
+                    break;
+                case Mode.Victory:
+                    victory.Draw(gameTime, spriteBatch);
+                    break;
+                default:
+                    break;
+            }
+            base.Draw(gameTime);
+        }
+    }
+}

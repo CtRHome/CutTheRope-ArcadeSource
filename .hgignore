@@ -1,0 +1,14 @@
+syntax: glob
+*\bin/*
+*\obj/*
+*\.svn/*
+*\.mayaSwatches/*
+*.user
+*.suo
+*.db
+*.orig
+CTR MonoGame.userprefs
+CTR MonoGame Windows/CTR MonoGame Windows.pidb
+QuickFont/QuickFont.pidb
+*.pidb
+*.stetic

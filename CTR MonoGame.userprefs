@@ -1,0 +1,27 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="CTR MonoGame Windows/CTRGame.cs">
+    <Files>
+      <File FileName="CTR MonoGame Windows/ATTRACT.CS" Line="774" Column="14" />
+      <File FileName="CTR MonoGame Windows/CTRGame.cs" Line="324" Column="51" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="CTR MonoGame Windows" expanded="True">
+            <Node name="CTRGame.cs" selected="True" />
+          </Node>
+          <Node name="ParTimeUtil2" expanded="True">
+            <Node name="UserInterface" expanded="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore>
+      <Breakpoint file="/home/blanketfortgames/ICE/CTRHG/CTR MonoGame Windows/CTRGame.cs" line="102" />
+    </BreakpointStore>
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

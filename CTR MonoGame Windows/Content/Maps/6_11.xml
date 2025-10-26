@@ -1,0 +1,23 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign ropePhysicsSpeed="1.0" twoParts="false" />
+</layer>
+<layer name="Objects">
+<target x="235" y="405" />
+<electro x="53" y="179" initialDelay="-2.0" offTime="2.0" onTime="2.0" angle="270" size="5" />
+<electro x="121" y="178" initialDelay="-2.0" offTime="2.0" onTime="2.0" angle="270" size="5" />
+<electro x="266" y="180" initialDelay="-2.0" offTime="2.0" onTime="2.0" angle="270" size="5" />
+<electro x="203" y="180" initialDelay="-2.0" offTime="2.0" onTime="2.0" angle="270" size="5" />
+<star x="231" y="177" timeout="-1" />
+<star x="86" y="178" timeout="-1" />
+<grab x="161" y="41" length="80" wheel="false" gun="false" radius="-1" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" part="L" />
+<grab x="160" y="298" length="80" wheel="false" gun="false" radius="-1" moveLength="270" moveVertical="false" moveOffset="135" spider="false" part="L" />
+<star x="80" y="410" timeout="7" />
+<candy x="157" y="174" />
+<spike1 x="235" y="260" angle="0" size="1" />
+<spike1 x="87" y="258" angle="0" size="1" />
+<spike1 x="234" y="99" angle="0" size="1" />
+<spike1 x="86" y="100" angle="0" size="1" />
+</layer>
+</map>

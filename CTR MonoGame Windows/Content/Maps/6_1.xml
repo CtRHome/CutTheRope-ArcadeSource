@@ -1,0 +1,45 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<target x="243" y="305" />
+<star x="76" y="65" timeout="-1" />
+<star x="241" y="379" timeout="-1" />
+<star x="78" y="212" timeout="-1" />
+<candy x="161" y="69" />
+<grab x="165" y="407" length="310" wheel="true" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<bubble x="161" y="68" />
+<pump x="78" y="311" angle="0" />
+<tutorialText x="14" y="335" locale="en" text="Rotate the wheel to control the rope length" width="120" />
+<tutorial03 x="166" y="409" locale="en" moveSpeed="100" rotateSpeed="100" />
+<pump x="233" y="216" angle="-180" />
+</layer>
+<layer name="Ru">
+<tutorialText x="15" y="335" locale="ru" text="Вращайте колесо для регулировки длины веревки" width="120" />
+<tutorial03 x="166" y="409" locale="ru" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Fr">
+<tutorial03 x="166" y="410" locale="fr" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="1" y="327" locale="fr" text="Fais tourner la roue pour contrôler la longueur de la corde" width="140" />
+</layer>
+<layer name="De">
+<tutorial03 x="166" y="409" locale="de" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="14" y="335" locale="de" text="Dreh am Rad um die Länge des Seils einzustellen" width="120" />
+</layer>
+<layer name="Zh">
+<tutorial03 x="166" y="409" locale="zh" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="98" y="437" locale="zh" text="旋转转轮以控制绳索长度
+" width="120" />
+</layer>
+<layer name="Ja">
+<tutorial03 x="166" y="409" locale="ja" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="14" y="335" locale="ja" text="車輪を回転
+させてコードの
+長さを調整
+しましょう
+
+" width="120" />
+</layer>
+</map>

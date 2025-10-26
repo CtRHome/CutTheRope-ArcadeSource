@@ -1,0 +1,43 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<target x="256" y="333" />
+<candy x="207" y="149" />
+<grab x="126" y="55" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<star x="149" y="234" timeout="-1" />
+<star x="214" y="286" timeout="-1" />
+<star x="56" y="225" timeout="-1" />
+<bouncer1 x="38" y="261" angle="40" size="1" />
+</layer>
+<layer name="En">
+<tutorial04 x="56" y="322" locale="en" angle="90" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="78" y="302" locale="en" text="Candy will bounce away from this platform" width="120" />
+</layer>
+<layer name="Ru">
+<tutorialText x="81" y="302" locale="ru" text="Леденец отскакивает от таких платформ" width="100" />
+<tutorial04 x="56" y="323" locale="ru" angle="90" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorial04 x="65" y="323" locale="de" angle="90" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="91" y="297" locale="de" text="Von dieser Plattform prallt der Bonbon ab" width="90" />
+</layer>
+<layer name="Fr">
+<tutorial04 x="57" y="323" locale="fr" angle="90" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="79" y="301" locale="fr" text="Le bonbon rebondira hors de cette plateforme" width="150" />
+</layer>
+<layer name="Zh">
+<tutorial04 x="28" y="289" locale="zh" angle="90" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="100" y="286" locale="zh" text="糖果将从这个平台上弹走
+" width="90" />
+</layer>
+<layer name="Ja">
+<tutorial04 x="29" y="321" locale="ja" angle="90" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="95" y="310" locale="ja" text="弾んだキャンディーは
+このプラットホームから
+飛び跳ねてしまいます
+" width="90" />
+</layer>
+</map>

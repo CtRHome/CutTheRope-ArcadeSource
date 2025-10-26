@@ -1,0 +1,1013 @@
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using Tao.Sdl;
+
+namespace CTR_MonoGame
+{
+    class Attract : SingleLevel
+    {
+        enum Mode { Vignette, GetBonus, RedemptionLevel }
+
+        TextSprite bigFont, littleFont;
+        MenuGraphicSprite logo, candy;
+        Queue<AttractAction> actions;
+        TutorialGraphicSprite hand;
+        int screenNum;
+        TopBannerSprite tbs;
+        bool oneShot;
+        SkipButton skipButton;
+        GlobalState realState;
+        float musicDelayTimer;
+        Input input;
+
+        protected bool[] realTouchDragging = new bool[Input.TOUCH_COUNT];
+        protected List<Cut> realCuts;
+        SoundFX[] sounds;
+        int soundIndex;
+
+        int vignetteCount;
+        float cutTimer, getBonusTimer;
+        RedemptionLevel subLevel;
+        Texture2D getBonus;
+        Mode currentMode;
+
+
+        public bool Done
+        {
+            get;
+            protected set;
+        }
+
+        public bool BonusMode
+        {
+            get { return currentMode == Mode.RedemptionLevel; }
+        }
+
+        float transitionTime, age;
+
+        public Attract(ContentManager content, Input input)
+            : base(new FauxInput(), content)
+        {
+            levelSize = new Point(1, 2);
+
+            bigFont = new TextSprite(content, true);
+            littleFont = new TextSprite(content, false);
+
+            logo = new MenuGraphicSprite(content, MenuGraphicSprite.Sign.Logo);
+            candy = new MenuGraphicSprite(content, MenuGraphicSprite.Sign.Candy1);
+            hand = new TutorialGraphicSprite(content, TutorialGraphicSprite.Sign.Finger);
+            tbs = new TopBannerSprite(content);
+
+            shade = content.Load<Texture2D>("menu_drawings_bigpage_markers_hd");
+
+            screenNum = -1;
+
+            musicDelayTimer = 30;
+
+            this.input = input;
+            realCuts = new List<Cut>();
+
+            sounds = new SoundFX[]
+            {
+                 new SoundFX("Content/monster_open.ogg"),
+                 new SoundFX("Content/monster_close.ogg"),
+                 new SoundFX("Content/monster_chewing.ogg"),
+                 new SoundFX("Content/monster_sad.ogg")
+            };
+
+            ResetScene();
+
+            this.input = input;
+
+            currentMode = Mode.Vignette;
+
+            getBonus = content.Load<Texture2D>("getBonusAttract");
+        }
+
+        public Attract(ContentManager content, Input input, int box, int level)
+            : base(new FauxInput(), content, box, level)
+        {
+            bigFont = new TextSprite(content, true);
+            littleFont = new TextSprite(content, false);
+
+            realState = new GlobalState();
+
+            this.input = input;
+
+            realState.Candy = new Candy(content, new Vector2(270, 95), false, false);
+            realState.Gravity = Vector2.UnitY * 784;
+            realState.Camera = new Camera(new Point(1, 1), realState);
+            realState.Input = input;
+
+
+            logo = new MenuGraphicSprite(content, MenuGraphicSprite.Sign.Logo);
+            candy = new MenuGraphicSprite(content, MenuGraphicSprite.Sign.Candy1);
+            hand = new TutorialGraphicSprite(content, TutorialGraphicSprite.Sign.Finger);
+            tbs = new TopBannerSprite(content);
+
+            shade = content.Load<Texture2D>("menu_drawings_bigpage_markers_hd");
+
+            int levelID = (box - 1) * 25 + level - 1;
+
+            oneShot = true;
+
+            skipButton = new SkipButton(content, 0.5f);
+
+            actions = new Queue<AttractAction>();
+            if (levelID == 0)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 740), new Vector2(800, 700), 0.5f));
+            }
+            if (levelID == 5)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 940), new Vector2(800, 900), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 2.5f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(540, 350)));
+            }
+            if (levelID == 179)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new AttractAction(state.Input, 0));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(700, 540), new Vector2(1000, 500), 0.5f));
+            }
+            if (levelID == 41)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(50, 740), new Vector2(500, 700), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.5f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(350, 1800)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(350, 1800)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(350, 1800)));
+                actions.Enqueue(new AttractAction(state.Input, 1.25f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(350, 450)));
+                actions.Enqueue(new AttractAction(state.Input, 2f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(600, 740), new Vector2(900, 300), 0.5f));
+            }
+            if (levelID == 73)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new AttractAction(state.Input, 1f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(50, 540), new Vector2(250, 500), 0.5f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(250, 540), new Vector2(650, 500), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 1f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(800, 740), new Vector2(1000, 700), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.5f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(800, 1250), new Vector2(1000, 1240), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.25f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(900, 800)));
+            }
+            if (levelID == 50)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(100, 1100), new Vector2(980, 1100), 2f));
+                actions.Enqueue(new AttractAction(state.Input, 2.5f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(980, 1130), new Vector2(100, 1130), 1f));
+            }
+            if (levelID == 175)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 550), new Vector2(250, 850), 0.5f));
+            }
+            if (levelID == 201)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(350, 700)));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 1750), new Vector2(700, 1550), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 1f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(350, 700)));
+            }
+            if (levelID == 206)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new AttractAction(state.Input, 1.0f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(900, 550), new Vector2(100, 750), 1.6f));
+            }
+            if (levelID == 13)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(10, 1250), new Vector2(300, 1150), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 2.5f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(180, 950)));
+            }
+            if (levelID == 188)
+            {
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(540, 1250)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(540, 1250)));
+            }
+            if (levelID == 203)
+            {
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(354, 1350)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(745, 1350)));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(300, 1750), new Vector2(800, 1650), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(354, 1350)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(745, 1350)));
+            }
+            if (levelID == 63)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 4f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(10, 550), new Vector2(300, 550), 0.25f));
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(500, 1150), new Vector2(400, 1350), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.8f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(600, 1350), new Vector2(1000, 1150), 0.5f));
+            }
+            if (levelID == 11)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(100, 1250), new Vector2(400, 1650), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.95f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(900, 650), new Vector2(540, 1050), 0.25f));
+                actions.Enqueue(new AttractAction(state.Input, 2.3f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(500, 1350), new Vector2(900, 1650), 0.5f));
+            }
+            if (levelID == 20)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(10, 1350), new Vector2(1050, 1350), 1f));
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(300, 850), new Vector2(880, 850), 0.2f));
+                actions.Enqueue(new AttractAction(state.Input, 0.25f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(540, 750)));
+            }
+            if (levelID == 33)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(300, 550), new Vector2(600, 550), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 1.75f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(300, 1250), new Vector2(800, 1250), 0.5f));
+            }
+            if (levelID == 136)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1.1f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(300, 1750), new Vector2(800, 1650), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.27f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(100, 1450)));
+                actions.Enqueue(new AttractAction(state.Input, 0.15f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(940, 1250)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(940, 1250)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(940, 1250)));
+
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(100, 850)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(100, 850)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(100, 850)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(100, 850)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(100, 850)));
+            }
+            if (levelID == 46)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(1000, 750)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(1000, 750)));
+                actions.Enqueue(new AttractAction(state.Input, 2.2f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(700, 550), new Vector2(1000, 350), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.3f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(500, 1350), new Vector2(1000, 1450), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 3f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(1000, 750)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(1000, 750)));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(300, 450)));
+            }
+            if (levelID == 214)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(50, 1750), new Vector2(500, 1650), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 0.5f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(440, 1200)));
+                actions.Enqueue(new AttractAction(state.Input, 0.5f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(440, 1200)));
+                actions.Enqueue(new AttractAction(state.Input, 0.7f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(200, 550)));
+            }
+            if (levelID == 44)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 2.3f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(500, 850), new Vector2(50, 1050), 0.5f));
+                actions.Enqueue(new PokeAction(state.Input, new Vector2(350, 530)));
+                actions.Enqueue(new AttractAction(state.Input, 1.7f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(600, 1550), new Vector2(900, 1850), 0.5f));
+            }
+            if (levelID == 51)
+            {
+                actions.Enqueue(new AttractAction(state.Input, 1));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(500, 850), new Vector2(500, 550), 0.5f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(600, 550), new Vector2(800, 550), 0.5f));
+                actions.Enqueue(new AttractAction(state.Input, 1.1f));
+                actions.Enqueue(new SwipeAction(state.Input, new Vector2(500, 550), new Vector2(500, 850), 0.5f));
+            }
+        }
+
+        void ResetScene()
+        {
+            gotCandy = null;
+            gameOver = false;
+            base.InitializeArrays(new FauxInput(), content);
+            actions = new Queue<AttractAction>();
+
+            totalTime = 0;
+
+            box = Box.GetBox(1);
+            box.Load(content);
+
+            float ninety = (float)Math.PI / 2;
+
+
+            switch (screenNum)
+            {
+                default: // -1;
+                    screenNum = -1;
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(500, 800), false, false);
+
+                    stars = new Star[3];
+                    stars[0] = new Star(content, null, new Vector2(500, 1200), -1);
+                    stars[1] = new Star(content, null, new Vector2(500, 1000), -1);
+                    stars[2] = new Star(content, null, new Vector2(500, 1400), -1);
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(500, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(800, 650), 0.5f));
+                    break;
+                case 0:
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(300, 800), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(800, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(300, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(500, 650), 0.5f));
+                    break;
+                case 1:
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(300, 800), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(800, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(300, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(400, 650)));
+
+                    bubbles.Add(new Bubble(content, new Vector2(300, 1200)));
+                    actions.Enqueue(new AttractAction(state.Input, 1.5f));
+                    actions.Enqueue(new PokeAction(state.Input, new Vector2(300, 800)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(500, 1400), -1, false, 0, 200, 200, false, false, null));
+                    break;
+                case 2:
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(500, 800), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(300, 600), -1, false, 0, -1, 300, true, false, state.Candy));
+                    grabs.Add(new Grab(content, null, new Vector2(800, 600), -1, false, 0, -1, 300, true, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(500, 650)));
+                    break;
+                case 3:
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(500, 800), false, false);
+
+                    stars = new Star[0];
+
+                    spikes.Add(new Spike(content, null, new Vector2(500, 1300), 0, 1));
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(500, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(800, 650)));
+                    break;
+                case 4:
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(500, 800), false, false);
+
+                    stars = new Star[3];
+                    stars[0] = new Star(content, null, new Vector2(500, 1200), 2.5f);
+                    stars[1] = new Star(content, null, new Vector2(500, 1000), 2f);
+                    stars[2] = new Star(content, null, new Vector2(500, 1400), 3);
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(500, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(800, 650)));
+                    break;
+                case 5:
+                    box = new FoilBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(200, 800), false, false);
+
+                    stars = new Star[0];
+
+                    spikes.Add(new ElectroSpike(content, null, new Vector2(500, 1000), ninety, 0, 2, 2));
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(200, 600), 600, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 600), new Vector2(800, 600), 2));
+                    actions.Enqueue(new AttractAction(state.Input, 3));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(600, 690), new Vector2(1000, 650)));
+                    break;
+                case 6:
+                    box = new MagicBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(300, 800), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(700, 1200)));
+
+                    hats.Add(new MagicHat(content, new Vector2(300, 1600), -ninety, null, 0));
+                    hats.Add(new MagicHat(content, new Vector2(700, 1600), -ninety, null, 0));
+
+                    grabs.Add(new Grab(content, null, new Vector2(300, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(800, 650)));
+                    break;
+                case 7:
+                    box = new FabricBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(540, 1100), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(850, 900)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(540, 900), -1, false, 0, -1, 200, false, false, state.Candy));
+
+                    Vector2 pumpPos = new Vector2(400, 1200);
+
+                    pumps.Add(new Pump(content, pumpPos, ninety));
+
+                    actions.Enqueue(new PokeAction(state.Input, pumpPos));
+                    actions.Enqueue(new PokeAction(state.Input, pumpPos));
+                    break;
+                case 8:
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(540, 900), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(850, 800)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(650, 1000), -1, false, 0, -1, 300, false, false, state.Candy));
+                    grabs.Add(new Grab(content, null, new Vector2(100, 1750), -1, false, 0, -1, 200, false, false, state.Candy));
+
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(100, 1690), new Vector2(800, 1750)));
+
+                    break;
+
+                case 9:
+                    box = new ToyBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(300, 800), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(700, 1200)));
+
+                    bouncers.Add(new Bouncer(content, null, new Vector2(300, 1400), 0.3f, 2));
+
+                    grabs.Add(new Grab(content, null, new Vector2(300, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(800, 650)));
+                    break;
+
+                case 10:
+                    box = new CosmicBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(510, 1600), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 800)));
+
+                    gravityButtons.Add(new GravityButton(content, new Vector2(300, 1200)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(500, 1400), -1, false, 0, -1, 155, false, false, state.Candy));
+
+                    actions.Enqueue(new PokeAction(state.Input, new Vector2(300, 1200)));
+                    actions.Enqueue(new AttractAction(state.Input, 2.5f));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 1300), new Vector2(800, 1300), 0.5f));
+                    break;
+
+                case 11:
+                    box = new GiftBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(500, 1600), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 1000)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(500, 800), -1, false, 0, -1, 800, false, true, state.Candy));
+                    actions.Enqueue(new RotateAction(state.Input, new Vector2(500, 800), 60, false));
+                    actions.Enqueue(new RotateAction(state.Input, new Vector2(500, 800), 60, false));
+
+                    break;
+                case 12:
+                    box = new BuzzBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(100, 1200), false, false);
+
+                    stars = new Star[0];
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(800, 1200)));
+
+                    Mover m = Mover.Build(new Vector2(100, 800), "207,0", 100);
+
+                    grabs.Add(new Grab(content, m, new Vector2(100, 800), -1, false, 0, -1, 400, false, false, state.Candy));
+                    pollen.AddPollen(m);
+
+                    break;
+                case 13:
+                    box = new ToolBox();
+                    box.Load(content);
+
+                    actions.Enqueue(new AttractAction(state.Input, 2));
+
+                    state.Candy = new Candy(content, new Vector2(500, 800), false, false);
+
+                    stars = new Star[0];
+
+                    spikes.Add(new RotoSpike(content, null, new Vector2(400, 1150), 0, 3, 1));
+                    spikes.Add(new RotoSpike(content, null, new Vector2(600, 1400), 0, 3, 2));
+
+                    omnoms.Add(new OMNOM(content, box, new Vector2(500, 1600)));
+
+                    grabs.Add(new Grab(content, null, new Vector2(500, 600), -1, false, 0, -1, 155, false, false, state.Candy));
+                    actions.Enqueue(new PokeAction(state.Input, new Vector2(400, 1150)));
+                    actions.Enqueue(new AttractAction(state.Input, 0.5f));
+                    actions.Enqueue(new SwipeAction(state.Input, new Vector2(200, 690), new Vector2(800, 650), 0.5f));
+                    break;
+
+            }
+            state.Camera = new Camera(new Point(1, 1), state);
+
+            screenNum++;
+        }
+
+        public override void UpdateTransition(GameTime gameTime)
+        {
+            base.UpdateTransition(gameTime);
+            if (oneShot)
+            {
+                skipButton.Update(gameTime, realState);
+                if (skipButton.Pressed)
+                {
+                    Done = true;
+                }
+            }
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            switch (currentMode)
+            {
+                default:
+                case Mode.Vignette:
+                    UpdateVignette(gameTime);
+                    break;
+                case Mode.GetBonus:
+                    if (getBonusTimer > 0)
+                    {
+                        getBonusTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    }
+                    else
+                    {
+                        transitionTime = 1;
+                        getBonusTimer = 8;
+                    }
+                    if (transitionTime >= 0)
+                    {
+                        float dT = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                        if (transitionTime > 0.5f && transitionTime - dT <= 0.5f)
+                        {
+                            currentMode = Mode.RedemptionLevel;
+                            subLevel = new RedemptionLevel(state.Input, content, true);
+                            cutTimer = 4f + 6f * (float)Util.R.NextDouble();
+                        }
+                        transitionTime -= dT;
+                    }
+                    else
+                    {
+                        transitionTime = 0;
+                    }
+                    break;
+                case Mode.RedemptionLevel:
+                    subLevel.Update(gameTime);
+                    if (cutTimer > 0)
+                    {
+                        cutTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    }
+                    else
+                    {
+                        cutTimer = 9999;
+                        subLevel.CutRope(true);
+                    }
+                    if (subLevel.GameOver && transitionTime <= 0)
+                    {
+                        transitionTime = 1;
+                    }
+                    if (transitionTime >= 0)
+                    {
+                        float dT = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                        if (transitionTime > 0.5f && transitionTime - dT <= 0.5f)
+                        {
+                            currentMode = Mode.Vignette;
+                        }
+                        transitionTime -= dT;
+                    }
+                    else
+                    {
+                        transitionTime = 0;
+                    }
+                    break;
+            }
+
+            if (input != null)
+            {
+                for (int i = realCuts.Count - 1; i >= 0; i--)
+                {
+                    realCuts[i].lifetime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    if (realCuts[i].lifetime <= 0)
+                    {
+                        realCuts.RemoveAt(i);
+                    }
+                }
+                for (int i = 0; i < Input.TOUCH_COUNT; i++)
+                {
+                    ApplyRealTouch(i);
+                }
+            }
+
+            if (SdlMixer.Mix_PlayingMusic() > 0)
+            {
+                musicDelayTimer = 0;
+            }
+            else
+            {
+                musicDelayTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                float amf = 0;
+                switch (FCOptions.AttractMusicFrequency)
+                {
+                    case AttractMusicFrequency.Always:
+                    default:
+                        break;
+                    case AttractMusicFrequency.Off:
+                        amf = 5000;
+                        musicDelayTimer = 0;
+                        break;
+                    case AttractMusicFrequency.Two:
+                        amf = 120;
+                        break;
+                    case AttractMusicFrequency.Five:
+                        amf = 300;
+                        break;
+                    case AttractMusicFrequency.Ten:
+                        amf = 600;
+                        break;
+                    case AttractMusicFrequency.Fifteen:
+                        amf = 900;
+                        break;
+                }
+
+                if (musicDelayTimer > amf)
+                {
+                    CTRGame.PlayMenuMusic();
+                    musicDelayTimer = 0;
+                }
+            }
+        }
+
+        private void UpdateVignette(GameTime gameTime)
+        {
+            state.Input.Update();
+            if (actions != null && actions.Count > 0)
+            {
+                actions.Peek().Update(gameTime);
+                if (actions.Peek().Done)
+                {
+                    actions.Dequeue();
+                }
+            }
+            if (oneShot)
+            {
+                skipButton.Update(gameTime, realState);
+                if (skipButton.Pressed)
+                {
+                    Done = true;
+                }
+                age += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (age > 20)
+                {
+                    Done = true;
+                }
+            }
+            base.Update(gameTime);
+            if (GameOver && transitionTime <= 0)
+            {
+                transitionTime = 1;
+                if (oneShot)
+                {
+                    Done = true;
+                }
+            }
+            if (transitionTime >= 0)
+            {
+                float dT = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (transitionTime > 0.5f && transitionTime - dT <= 0.5f)
+                {
+                    ResetScene();
+                    vignetteCount++;
+                    if (vignetteCount > 2)
+                    {
+                        vignetteCount = 0;
+                        currentMode = Mode.GetBonus;
+                        getBonusTimer = 8;
+                    }
+                }
+                transitionTime -= dT;
+            }
+            else
+            {
+                transitionTime = 0;
+            }
+        }
+
+        protected void ApplyRealTouch(int touch)
+        {
+            if (input.TouchDown(touch) && !state.Camera.IgnoreTouches)
+            {
+                if (input.MouseJustClicked(touch))
+                {
+                    realTouchDragging[touch] = true;
+                }
+                else
+                {
+                    if (realTouchDragging[touch])
+                    {
+                        if (input.TouchPos(touch) != input.LastTouchPos(touch))
+                        {
+                            realCuts.Add(new Cut(input.LastTouchPos(touch) + state.Camera.Position, input.TouchPos(touch) + state.Camera.Position));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                realTouchDragging[touch] = false;
+            }
+        }
+
+
+        protected override void RecordData(bool victory)
+        { }
+
+        public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            switch (currentMode)
+            {
+                default:
+                case Mode.Vignette:
+                    DrawVignette(gameTime, spriteBatch);
+                    break;
+                case Mode.GetBonus:
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, Matrix.CreateScale(0.5f));
+                    spriteBatch.Draw(getBonus, Vector2.Zero, Color.White);
+                    spriteBatch.Draw(shade, new Rectangle(0, 0, 1080, 1920), new Color(Color.White, Math.Min(1, 2 * (0.5f - Math.Abs(transitionTime - 0.5f)))));
+                    DrawBanner(spriteBatch);
+                    spriteBatch.End();
+                    break;
+                case Mode.RedemptionLevel:
+                    subLevel.Draw(gameTime, spriteBatch);
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, Matrix.CreateScale(0.5f));
+                    spriteBatch.Draw(shade, new Rectangle(0, 0, 1080, 1920), new Color(Color.White, Math.Min(1, 2 * (0.5f - Math.Abs(transitionTime - 0.5f)))));
+                    DrawBanner(spriteBatch);
+                    Vector2 logoPos = new Vector2(540, 540);
+                    logo.Draw(spriteBatch, logoPos, 0);
+                    candy.Draw(spriteBatch, logoPos, 0);
+                    bigFont.SetScale(2);
+                    bigFont.SetScale(1);
+                    spriteBatch.End();
+                    break;
+            }
+            if (realCuts != null)
+            {
+                foreach (Cut cut in realCuts)
+                {
+                Vector2 startPos = cut.start - state.Camera.Position;
+                Vector2 endPos = cut.end - state.Camera.Position;
+                GLDrawer.DrawAntialiasedLine(startPos, endPos, cut.width * cut.lifetime * 10, Color.White);
+                }
+            }
+            if (input.IOBoard.TicketError && FCOptions.TicketsOwed > 0)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, Matrix.CreateScale(0.5f));
+                bigFont.Draw(spriteBatch, FCOptions.TicketName + " Error! Owed " + (FCOptions.TicketsOwed * FCOptions.TicketMultiplier) + " " + FCOptions.TicketName + "s", new Vector2(50, 1800), TextSprite.Alignment.Left, Color.Red);
+                spriteBatch.End();
+            }
+        }
+
+        private void DrawBanner(SpriteBatch spriteBatch)
+        {
+            tbs.Draw(spriteBatch, Vector2.Zero, 0);
+            string bonusText = "Win up to " + FCOptions.BigBonusValue + " " + (FCOptions.FixedTickets || !FCOptions.UseTickets ? "Point" : FCOptions.TicketName.ToString()) + "s!";
+            bigFont.Draw(spriteBatch, bonusText, new Vector2(540, 20), TextSprite.Alignment.Center);
+        }
+
+        private void DrawVignette(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            base.Draw(gameTime, spriteBatch);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, Matrix.CreateScale(0.5f));
+            if (actions.Count > 0 && actions.Peek().HandAlpha > 0)
+            {
+                hand.SetAlpha(actions.Peek().HandAlpha);
+                hand.Draw(spriteBatch, actions.Peek().HandPos + new Vector2(-180, 250), 0);
+            }
+            if (oneShot)
+            {
+                spriteBatch.Draw(shade, new Rectangle(0, 0, 1080, 1920), new Color(Color.White, 0.4f));
+                bigFont.SetScale(Math.Max(6 - age * 2, 1));
+                bigFont.Draw(spriteBatch, "Hint:", new Vector2(540, 0), TextSprite.Alignment.Center);
+                skipButton.Draw(spriteBatch, Vector2.Zero);
+            }
+            else
+            {
+                spriteBatch.Draw(shade, new Rectangle(0, 0, 1080, 1920), new Color(Color.White, Math.Min(1, 2 * (0.5f - Math.Abs(transitionTime - 0.5f)))));
+                DrawBanner(spriteBatch);
+                Vector2 logoPos = new Vector2(540, 540);
+                logo.Draw(spriteBatch, logoPos, 0);
+                candy.Draw(spriteBatch, logoPos, 0);
+                bigFont.SetScale(2);
+                bigFont.SetScale(1);
+            }
+            spriteBatch.End();
+        }
+
+        protected override void DrawBackground(SpriteBatch spriteBatch)
+        {
+            box.Background.DrawFullScreen(spriteBatch);
+        }
+
+        protected override void DrawHudStars(SpriteBatch spriteBatch)
+        { }
+
+        class AttractAction
+        {
+            protected float timeLeft, totalTime;
+
+            protected FauxInput input;
+
+            public bool Done
+            {
+                get
+                {
+                    return timeLeft <= 0;
+                }
+            }
+
+            public float HandAlpha
+            {
+                get;
+                protected set;
+            }
+
+            public Vector2 HandPos
+            {
+                get;
+                protected set;
+            }
+
+            protected float NormalTime
+            {
+                get
+                {
+                    return timeLeft / totalTime;
+                }
+            }
+
+            public AttractAction(Input input, float lifeTime)
+            {
+                this.input = input as FauxInput;
+                timeLeft = totalTime = lifeTime;
+                HandAlpha = 0;
+                HandPos = Vector2.Zero;
+            }
+
+            public virtual void Update(GameTime gameTime)
+            {
+                timeLeft -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+        }
+
+        class SwipeAction : AttractAction
+        {
+            Vector2 startPos, endPos;
+
+            public SwipeAction(Input input, Vector2 start, Vector2 end)
+                : this(input, start, end, 1)
+            { }
+
+            public SwipeAction(Input input, Vector2 start, Vector2 end, float time)
+                : base(input, time)
+            {
+                startPos = start;
+                endPos = end;
+            }
+
+            public override void Update(GameTime gameTime)
+            {
+                base.Update(gameTime);
+                HandAlpha = Math.Min(1, 10 * (0.5f - Math.Abs(NormalTime - 0.5f)));
+                HandPos = startPos + (endPos - startPos) * (1 - NormalTime);
+                input.SetMouse(HandPos, HandAlpha > 0.5);
+            }
+        }
+
+        class RotateAction : AttractAction
+        {
+            Vector2 center;
+            float radius;
+            bool clockwise;
+
+            public RotateAction(Input input, Vector2 center, float radius, bool clockwise)
+                : this(input, center, radius, clockwise, 1)
+            { }
+
+            public RotateAction(Input input, Vector2 center, float radius, bool clockwise, float time)
+                : base(input, time)
+            {
+                this.center = center;
+                this.radius = radius;
+                this.clockwise = clockwise;
+            }
+
+            public override void Update(GameTime gameTime)
+            {
+                base.Update(gameTime);
+                HandAlpha = Math.Min(1, 10 * (0.5f - Math.Abs(NormalTime - 0.5f)));
+                float t = clockwise ? NormalTime : (1 - NormalTime);
+                t *= 2 * (float)Math.PI;
+                HandPos = center + new Vector2((float)Math.Sin(t), (float)Math.Cos(t)) * radius;
+                input.SetMouse(HandPos, HandAlpha > 0.5);
+            }
+        }
+
+        class PokeAction : AttractAction
+        {
+            Vector2 where;
+
+            public PokeAction(Input input, Vector2 point)
+                : base(input, 0.25f)
+            {
+                where = point;
+            }
+
+            public override void Update(GameTime gameTime)
+            {
+                base.Update(gameTime);
+                HandAlpha = Math.Min(1, 2 * (0.5f - Math.Abs(NormalTime - 0.5f)));
+                HandPos = where + Vector2.One * 30 * (1 - (float)Math.Sin(NormalTime * Math.PI));
+                input.SetMouse(HandPos, HandAlpha > 0.75);
+            }
+        }
+
+    }
+}

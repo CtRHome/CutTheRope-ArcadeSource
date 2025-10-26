@@ -1,0 +1,44 @@
+<map>
+<layer name="settings">
+<map gridSize="32" width="320" height="480" />
+<gameDesign special="1" twoParts="false" ropePhysicsSpeed="1.0" water="0" waterSpeed="0" />
+</layer>
+<layer name="Objects">
+<target x="264" y="430" />
+<grab x="88" y="189" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="45" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="216" y="352" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="45" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<grab x="152" y="270" length="100" wheel="false" gun="false" kickable="false" kicked="false" radius="45" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<candy x="39" y="110" />
+<star x="84" y="270" timeout="-1" />
+<star x="204" y="432" timeout="-1" />
+<star x="148" y="354" timeout="-1" />
+<grab x="42" y="43" length="50" wheel="false" gun="false" kickable="false" kicked="false" radius="-1" invisible="false" moveLength="-1" moveVertical="false" moveOffset="0" spider="false" helicopter="false" part="L" hidePath="false" />
+<tutorialText x="129" y="51" locale="en" text="Automatic ropes appear when candy gets into their area" width="140" />
+<tutorial04 x="172" y="171" locale="en" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ru">
+<tutorial04 x="172" y="171" locale="ru" moveSpeed="100" rotateSpeed="100" />
+<tutorialText x="81" y="66" locale="ru" text="Авто-веревки появляются когда леденец попадает в их радиус" width="220" />
+</layer>
+<layer name="Fr">
+<tutorialText x="54" y="40" locale="fr" text="Les cordes automatiques apparaissent lorsqu'un bonbon arrive dans leur zone" width="260" />
+<tutorial04 x="162" y="144" locale="fr" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="De">
+<tutorialText x="99" y="47" locale="de" text="Sobald der Bonbon in ihrer Nähe ist, erscheinen automatisch Seile" width="180" />
+<tutorial04 x="172" y="170" locale="de" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Zh">
+<tutorialText x="128" y="84" locale="zh" text="当糖果进入他们领地时，
+自动绳就会出现
+" width="180" />
+<tutorial04 x="172" y="170" locale="zh" moveSpeed="100" rotateSpeed="100" />
+</layer>
+<layer name="Ja">
+<tutorialText x="100" y="82" locale="ja" text="キャンディーが接近すると
+自動式ロープが現われます
+
+" width="180" />
+<tutorial04 x="168" y="164" locale="ja" moveSpeed="100" rotateSpeed="100" />
+</layer>
+</map>
