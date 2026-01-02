@@ -69,7 +69,7 @@ namespace CTR_MonoGame
                 {
                     omnom.Value = FCOptions.BigBonusValue;
                     centerOmNom = omnom;
-                    if (Util.OnDevice)
+                    if (true)
                     {
                         omnom.SetType(content, OMNOM.SpecialCharacter.Prehistoric);
                     }
@@ -77,7 +77,7 @@ namespace CTR_MonoGame
                 else if (omnom.Value == 3000)
                 {
                     omnom.Value = FCOptions.MediumBonusValue;
-                    if (Util.OnDevice)
+                    if (true)
                     {
                         if (i % 2 == 0)
                         {
@@ -93,7 +93,7 @@ namespace CTR_MonoGame
                 else if (omnom.Value == 1000)
                 {
                     omnom.Value = FCOptions.SmallBonusValue;
-                    if (Util.OnDevice)
+                    if (true)
                     {
                         if (i % 2 == 0)
                         {
